@@ -147,6 +147,15 @@ class registration_modal(discord.ui.Modal):
                             await add_role(itx.guild.id, itx.user.id, role)
                             await log(itx.guild.id,f"Player {itx.user.name} registered for {self.tournament_name} under username {input} with rating {rating}")
                             await update_tournament_status(itx.guild_id)
+                else: 
+                    username = await tetrio.get_player_id(self.name.value)
+                    rating = t_data["data"]["tr"]
+                    await db.insert_into_tournament(itx.user.id,itx.user.name,itx.guild.id,self.tournament_name,rating,username)
+                    await itx.response.send_message(f"Successfully registered for {self.tournament_name} under username {input}",ephemeral=True)
+                    role = await db.get_tournament_role(itx.guild.id, self.tournament_name)
+                    await add_role(itx.guild.id, itx.user.id, role)
+                    await log(itx.guild.id,f"Player {itx.user.name} registered for {self.tournament_name} under username {input} with rating {rating}")
+                    await update_tournament_status(itx.guild_id)
 
 class registration_view(discord.ui.View):
     def __init__(self, guild_id, tournaments, *, timeout = None):
