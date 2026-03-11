@@ -1,4 +1,5 @@
 import sqlite3
+from typing import List, Optional
 import pandas as pd
 
 con = sqlite3.connect("registrations.db",autocommit=True)
@@ -109,7 +110,7 @@ async def get_logging_channel(guild_id : int) -> int:
     cur.close()
     return data[0][0]
 
-async def insert_into_tournament(discord_id : int, discord_username : str, server_id : int, tournament_name : str, rating : float, game_username : str = None) -> None:
+async def insert_into_tournament(discord_id : int, discord_username : str, server_id : int, tournament_name : str, rating : float, game_username : Optional[str] = None) -> None:
     cur = con.cursor()
     cur.execute("INSERT INTO registration (discord_id, discord_username, server_id, tournament_name, rating, game_username) VALUES (?, ?, ?, ?, ?, ?)",(discord_id,discord_username,server_id,tournament_name,rating,game_username))
     cur.close()
@@ -131,7 +132,7 @@ async def get_open_tournaments(guild_id : int) -> list[str]:
         out.append(i[0])
     return out
 
-async def get_tournament_role(guild_id : int, tournament_name : str) -> str:
+async def get_tournament_role(guild_id : int, tournament_name : str) -> int | None:
     cur = con.cursor()
     res = cur.execute("SELECT participant_role FROM tournament WHERE server_id = ? AND tournament_name = ?",(guild_id,tournament_name))
     data = res.fetchall()
@@ -220,7 +221,7 @@ async def get_game_users_from_tournament(guild_id : int, tournament_name : str) 
         ret.append(i[0])
     return ret
 
-async def get_discord_user_from_game_username(guild_id : int, tournament_name : str, game_username : str) -> list[int, str]:
+async def get_discord_user_from_game_username(guild_id : int, tournament_name : str, game_username : str) -> List[int, str]:
     cur = con.cursor()
     res = cur.execute("SELECT discord_id, discord_username FROM registration WHERE server_id = ? AND tournament_name = ? AND game_username = ?",(guild_id,tournament_name,game_username))
     data = res.fetchall()
