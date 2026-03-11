@@ -1,10 +1,10 @@
-import requests
+import aiohttp
 
 ranks = {
     "x+": 1,
     "x": 2,
     "u": 3,
-    "ss": 4, 
+    "ss": 4,
     "s+": 5,
     "s": 6,
     "s-": 7,
@@ -21,15 +21,17 @@ ranks = {
     "d": 18,
 }
 
-async def get_player_data(usr:str):
-    headers = requests.utils.default_headers()
-    headers["User-Agent"] = "Space Shuttle"
-    data = requests.get(f"https://ch.tetr.io/api/users/{usr.lower()}/summaries/league", headers=headers)
-    return data.json()
+HEADERS = {
+    "User-Agent": "Space Shuttle / 2.0 (https://github.com/patttterson/Space-Shuttle-Beta)"
+}
 
-async def get_player_id(usr:str):
-    headers = requests.utils.default_headers()
-    headers["User-Agent"] = "Space Shuttle"
-    data = requests.get(f"https://ch.tetr.io/api/users/{usr.lower()}", headers=headers)
-    item = data.json()
-    return item["data"]["_id"]
+async def get_player_data(usr: str):
+    async with aiohttp.ClientSession(headers=HEADERS) as session:
+        async with session.get(f"https://ch.tetr.io/api/users/{usr.lower()}/summaries/league") as response:
+            return await response.json()
+
+async def get_player_id(usr: str):
+    async with aiohttp.ClientSession(headers=HEADERS) as session:
+        async with session.get(f"https://ch.tetr.io/api/users/{usr.lower()}") as response:
+            data = await response.json()
+            return data["data"]["_id"]
