@@ -18,7 +18,6 @@ async def init() -> None:
     await _con.execute("CREATE TABLE IF NOT EXISTS bracket(timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, tournament_url VARCHAR(256), tournament_name VARCHAR(128), server_id BIGINT, is_open BOOLEAN)")
     await _con.commit()
 
-
 async def execute_dql(sql: str) -> None:
     assert _con is not None
     cur = await _con.execute(sql)
@@ -104,6 +103,13 @@ async def set_registration_messages(guild_id: int, message_1_id: int, message_2_
 async def check_if_player_registered_for_tournament(guild_id: int, user_id: int, tournament_name: str) -> bool:
     assert _con is not None
     cur = await _con.execute("SELECT COUNT(*) FROM registration WHERE server_id = ? AND discord_id = ? AND tournament_name = ?", (guild_id, user_id, tournament_name))
+    data = await cur.fetchall()
+    return data[0][0] != 0
+
+
+async def check_if_username_registered_for_tournament(guild_id: int, tournament_name: str, game_username: str) -> bool:
+    assert _con is not None
+    cur = await _con.execute("SELECT COUNT(*) FROM registration WHERE server_id = ? AND tournament_name = ? AND game_username = ?", (guild_id, tournament_name, game_username))
     data = await cur.fetchall()
     return data[0][0] != 0
 

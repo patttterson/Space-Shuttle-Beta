@@ -64,6 +64,9 @@ class RegistrationModal(discord.ui.Modal):
                             await interaction.response.send_message("Registration Failed. Your peak rank is too high to play in this tournament", ephemeral=True)
                         else:
                             username = await tetrio.get_player_id(self.name.value)
+                            if await db.check_if_username_registered_for_tournament(interaction.guild.id, self.tournament_name, username):
+                                await interaction.response.send_message("Registration Failed: That TETR.IO username is already registered for this tournament", ephemeral=True)
+                                return
                             rating = t_data["data"]["tr"]
                             await db.insert_into_tournament(interaction.user.id, interaction.user.name, interaction.guild.id, self.tournament_name, rating, username)
                             await interaction.response.send_message(f"Successfully registered for `{self.tournament_name}` under username `{name_input}`, good luck!", ephemeral=True)
@@ -72,6 +75,9 @@ class RegistrationModal(discord.ui.Modal):
                             await utils.update_tournament_status(self.bot, interaction.guild.id)
                 else:
                     username = await tetrio.get_player_id(self.name.value)
+                    if await db.check_if_username_registered_for_tournament(interaction.guild.id, self.tournament_name, username):
+                        await interaction.response.send_message("Registration Failed: That TETR.IO username is already registered for this tournament", ephemeral=True)
+                        return
                     rating = t_data["data"]["tr"]
                     await db.insert_into_tournament(interaction.user.id, interaction.user.name, interaction.guild.id, self.tournament_name, rating, username)
                     await interaction.response.send_message(f"Successfully registered for `{self.tournament_name}` under username `{name_input}`, good luck!", ephemeral=True)
@@ -218,6 +224,9 @@ class RegistrationCog(commands.Cog):
                     return
 
         tetrio_username = await tetrio.get_player_id(registration_input)
+        if await db.check_if_username_registered_for_tournament(interaction.guild.id, tournament_name, tetrio_username):
+            await interaction.response.send_message("Registration Failed: That TETR.IO username is already registered for this tournament", ephemeral=True)
+            return
         rating = t_data["data"]["tr"]
         await db.insert_into_tournament(player_id, player.name, interaction.guild.id, tournament_name, rating, tetrio_username)
         await interaction.response.send_message(f"Successfully manually registered `{player.name}` for `{tournament_name}` under username `{registration_input}`")
