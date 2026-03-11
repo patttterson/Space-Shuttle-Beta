@@ -16,10 +16,13 @@ async def get_channel(bot, guild_id: int, channel_id: int) -> Optional[discord.T
 
 async def log(bot, guild_id: int, msg: str) -> None:
     channel_id = await db.get_logging_channel(guild_id)
-    if channel_id is not None:
-        channel = await get_channel(bot, guild_id, channel_id)
-        if channel is not None:
-            await channel.send(content=msg)
+    if not channel_id:
+        return
+
+    channel = await get_channel(bot, guild_id, channel_id)
+    if not channel:
+        return
+    await channel.send(content=msg)
 
 
 async def add_role(guild: discord.Guild, user_id: int, role_id: int) -> None:

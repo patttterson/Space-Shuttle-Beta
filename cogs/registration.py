@@ -39,7 +39,7 @@ class RegistrationModal(discord.ui.Modal):
             await utils.log(self.bot, interaction.guild.id, f"Player `{interaction.user.name}` registered for `{self.tournament_name}` with rating `{name_input}`")
             await utils.update_tournament_status(self.bot, interaction.guild.id)
         else:
-            t_data = await tetrio.get_player_data(self.name.value)
+            t_data, _ = await tetrio.get_player_tl_data(self.name.value)
             if t_data["success"] == False:
                 if t_data["error"]["msg"] == "No such user! | Either you mistyped something, or the account no longer exists.":
                     await interaction.response.send_message("Registration Failed: No such user! | Either you mistyped something, or the account no longer exists.", ephemeral=True)
@@ -63,9 +63,10 @@ class RegistrationModal(discord.ui.Modal):
                         elif caps[1] is not None and peak_rank < tetrio.ranks[caps[1]]:
                             await interaction.response.send_message("Registration Failed. Your peak rank is too high to play in this tournament", ephemeral=True)
                         else:
-                            username = await tetrio.get_player_id(self.name.value)
+                            player, _ = await tetrio.get_player(self.name.value)
+                            username = player["_id"]
                             if await db.check_if_username_registered_for_tournament(interaction.guild.id, self.tournament_name, username):
-                                await interaction.response.send_message("Registration Failed: That TETR.IO username is already registered for this tournament", ephemeral=True)
+                                await interaction.response.send_message("Registration Failed: That TETR.IO username is already registered for this tournament. If you believe this is an error, please contact a moderator.", ephemeral=True)
                                 return
                             rating = t_data["data"]["tr"]
                             await db.insert_into_tournament(interaction.user.id, interaction.user.name, interaction.guild.id, self.tournament_name, rating, username)
@@ -74,9 +75,10 @@ class RegistrationModal(discord.ui.Modal):
                             await utils.log(self.bot, interaction.guild.id, f"Player `{interaction.user.name}` registered for `{self.tournament_name}` under username `{name_input}` with rating `{rating}`")
                             await utils.update_tournament_status(self.bot, interaction.guild.id)
                 else:
-                    username = await tetrio.get_player_id(self.name.value)
+                    player, _ = await tetrio.get_player(self.name.value)
+                    username = player["_id"]
                     if await db.check_if_username_registered_for_tournament(interaction.guild.id, self.tournament_name, username):
-                        await interaction.response.send_message("Registration Failed: That TETR.IO username is already registered for this tournament", ephemeral=True)
+                        await interaction.response.send_message("Registration Failed: That TETR.IO username is already registered for this tournament. If you believe this is an error, please contact a moderator.", ephemeral=True)
                         return
                     rating = t_data["data"]["tr"]
                     await db.insert_into_tournament(interaction.user.id, interaction.user.name, interaction.guild.id, self.tournament_name, rating, username)
@@ -193,7 +195,7 @@ class RegistrationCog(commands.Cog):
             await utils.update_tournament_status(self.bot, interaction.guild.id)
             return
 
-        t_data = await tetrio.get_player_data(registration_input)
+        t_data, _ = await tetrio.get_player_tl_data(registration_input)
         if not t_data["success"]:
             if t_data["error"]["msg"] == "No such user! | Either you mistyped something, or the account no longer exists.":
                 await interaction.response.send_message("Registration Failed: No such user! | Either you mistyped something, or the account no longer exists.", ephemeral=True)
@@ -223,15 +225,16 @@ class RegistrationCog(commands.Cog):
                     await interaction.response.send_message("Registration Failed. Their peak rank is too high to play in this tournament")
                     return
 
-        tetrio_username = await tetrio.get_player_id(registration_input)
+        user_data, _ = await tetrio.get_player(registration_input)
+        tetrio_username = user_data["_id"]
         if await db.check_if_username_registered_for_tournament(interaction.guild.id, tournament_name, tetrio_username):
             await interaction.response.send_message("Registration Failed: That TETR.IO username is already registered for this tournament", ephemeral=True)
             return
         rating = t_data["data"]["tr"]
-        await db.insert_into_tournament(player_id, player.name, interaction.guild.id, tournament_name, rating, tetrio_username)
-        await interaction.response.send_message(f"Successfully manually registered `{player.name}` for `{tournament_name}` under username `{registration_input}`")
+        await db.insert_into_tournament(player_id, user_data["name"], interaction.guild.id, tournament_name, rating, tetrio_username)
+        await interaction.response.send_message(f"Successfully manually registered `{user_data['name']}` for `{tournament_name}` under username `{registration_input}`")
         await utils.add_role(interaction.guild, player_id, role)
-        await utils.log(self.bot, interaction.guild.id, f"Player `{player.name}` manually registered for `{tournament_name}` under username `{registration_input}` with rating `{rating}`")
+        await utils.log(self.bot, interaction.guild.id, f"Player `{user_data['name']}` manually registered for `{tournament_name}` under username `{registration_input}` with rating `{rating}`")
         await utils.update_tournament_status(self.bot, interaction.guild.id)
 
     @registration.command(name="manual-unregister", description="Manually unregister a player to your tournament.")

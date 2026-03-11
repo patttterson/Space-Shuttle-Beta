@@ -156,9 +156,10 @@ class TournamentCog(commands.Cog):
             await utils.update_tournament_status(self.bot, interaction.guild.id)
 
         for i, participant in enumerate(participants):
-            await asyncio.sleep(1)  # avoid hitting tetrio rate limits
             await response.edit(content=f"Updating Player {i+1} of {len(participants)}")
-            t_data = await tetrio.get_player_data(participant)
+            t_data, cached_until = await tetrio.get_player_tl_data(participant)
+            if not cached_until:
+                await asyncio.sleep(1)  # avoid hitting rate limits
             if not t_data["success"] or t_data["data"]["tr"] == -1:
                 continue
             if not remove_ineligible or caps[0] is None and caps[1] is None:
