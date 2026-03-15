@@ -231,10 +231,10 @@ class RegistrationCog(commands.Cog):
             await interaction.response.send_message("Registration Failed: That TETR.IO username is already registered for this tournament", ephemeral=True)
             return
         rating = t_data["data"]["tr"]
-        await db.insert_into_tournament(player_id, user_data["name"], interaction.guild.id, tournament_name, rating, tetrio_username)
-        await interaction.response.send_message(f"Successfully manually registered `{user_data['name']}` for `{tournament_name}` under username `{registration_input}`")
+        await db.insert_into_tournament(player_id, user_data["username"], interaction.guild.id, tournament_name, rating, tetrio_username)
+        await interaction.response.send_message(f"Successfully manually registered `{user_data['username']}` for `{tournament_name}` under username `{registration_input}`")
         await utils.add_role(interaction.guild, player_id, role)
-        await utils.log(self.bot, interaction.guild.id, f"Player `{user_data['name']}` manually registered for `{tournament_name}` under username `{registration_input}` with rating `{rating}`")
+        await utils.log(self.bot, interaction.guild.id, f"Player `{user_data['username']}` manually registered for `{tournament_name}` by {interaction.user.mention} under username `{registration_input}` with rating `{rating}`")
         await utils.update_tournament_status(self.bot, interaction.guild.id)
 
     @registration.command(name="manual-unregister", description="Manually unregister a player to your tournament.")
